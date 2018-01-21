@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-3.0.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+
+    <!--  从classPath中自动扫描带@Component、@Service、@Controller、@Repository组件 -->
+    <context:component-scan base-package="com.cnu.library.dao"></context:component-scan>
+
+    <!-- 文件加载器，加载类路径下的配置文件jdbc.properties -->
+    <context:property-placeholder location="classpath:jdbc.properties" />
+    <!-- 配置数据源 -->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+          destroy-method="close"
+          p:driverClassName="${jdbc.driverClassName}"
+          p:url="${jdbc.url}"
+          p:username="${jdbc.username}"
+          p:password="${jdbc.password}"
+          p:maxIdle= "${jdbc.maxIdle}"
+          p:initialSize="${jdbc.initialSize}"
+          p:minIdle="${jdbc.minIdle}"
+          p:minEvictableIdleTimeMillis="${jdbc.minEvictableIdleTimeMillis}"
+          p:maxWait="${jdbc.maxWait}"
+          p:maxActive="${jdbc.maxActive}"
+    />
+
+    <!-- AnnotationSessionFactoryBean扩展了LocalSessionFactoryBean类，可以根据实体类的注解获取ORM（关系对象映射）的配置信息，也可以混合使用Xml配置和注解配置的关系对象映射-->
+    <bean id="sessionFactory"
+          class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean"
+          p:dataSource-ref="dataSource">
+        <!-- Spring提供了一个packagesToScan属性，从而可以通过扫描方式加载带注解（@Entity）的实体类 -->
+        <!-- 将扫描并加载这些包路径（包括子包）的所有的带注解实体类 ，可接受多个包用逗号分隔即可-->
+        <property name="packagesToScan" value="com.cnu.library.model"/>
+        <property name="hibernateProperties">
+            <props><!--org.hibernate.dialect.MySQL5Dialect  org.hibernate.dialect.MySQLDialect-->
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+                <prop key="hibernate.show_sql">true</prop><!-- 显示sql语句 -->
+                <prop key="hibernate.format_sql">true</prop><!-- 规范显示sql语句 -->
+                <prop key="hibernate.hbm2ddl.auto">update</prop>   <!-- 每次都更新表 -->
+            </props>
+        </property>
+    </bean>
+<!--
+    让多个方法在同一个事务中。
+    1.HibernateTemplate中的模板方法确保Hibernate会话正常打开和关闭，并且还能使原生的Hibernate事务参与到Spring声明的事务管理中，
+    即下面的spring为hibernate声明的事务管理器，如果不用模板类，hibernate的原生的事务不会参与到Spirng的管理的事务中。
+
+    2.当然如果不用HibernateTemplate，还是想使用spring提供的事务管理。可以使用Hibernate的上下文会话持续化对象。
+
+    3实现：
+     3.1 service的方法上加上了@Transactional事务注解，service方法中调用了多个dao方法，那么多个dao方法如果以下面两种方式实现就会让多个dao在同一个事务中执行。
+     3.2 在dao方法中使用hibernateTemplate来操作持续化对象。如果service没有@Transactional,那么下面方法就是在单个事务中运行。
+     如 hibernateTemplate.save(book);
+     3.3 在dao方法中使用Hibernate的上下文会话持续化对象。如果service没有@Transactional,那么下面方法会报错。
+     如：Session session= sessionFactory.getCurrentSession();//从当前事务中获取会话，如果当前方法不在事务中，则会出错，dao的父方法即service方法应该有事务声明
+         session.save(book);
+      3.4 Session session= sessionFactory.openSession();//重新开启一个session，所以该方法都是独立执行的，即使service方法加了@Transactional事务，多个dao也不会再同一个事务中执行
+        session.save(book);
+-->
+    <bean id="hibernateTemplate" class="org.springframework.orm.hibernate3.HibernateTemplate"
+      p:sessionFactory-ref="sessionFactory"
+    />
+    <!-- 在Spring配置文件中配置Hibernate事务管理器，并启用注解驱动事务 ,如果hibernate使用模板类该事务管理器就可以对hibernate的事务起作用。-->
+    <bean id="transactionManager"
+          class="org.springframework.orm.hibernate3.HibernateTransactionManager"
+          p:sessionFactory-ref="sessionFactory" />
+   <!--启用注解驱动事务 ，默认情况下，它将用名称transactionManager寻找事务管理器（上面的事务管理器名称就为此）
+   可以通过@Transactional注解服务类，从而使其中的方法都具有事务性,当然也可以在某个方法是单独加事务,
+   @Transactional(readOnly=true) 该声明表示该方法取消事务操作
+   -->
+    <tx:annotation-driven transaction-manager="transactionManager" />
+</beans>

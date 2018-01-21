@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-3.0.xsd
+       http://www.springframework.org/schema/mvc
+       http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
+
+    <!--  从classPath中自动扫描带@Controller组件 -->
+    <context:component-scan base-package="com.cnu.library.action"></context:component-scan>
+    <!-- SpringMvc注解 ，会默认装配好一个LocalValidatorFactoryBean，
+          JSR-303的校验是基于注解的,通过在处理方法的入参上标注@Valid注解即可让SpringMvc在完成数据绑定后执行数据校验工作-->
+    <mvc:annotation-driven />
+    <!-- 配置Spring MVC视图解析器，将ModelAndView及字符串解析为具体的页面 -->
+    <!-- 通过prefix指定在试图名前所添加的前缀，通过suffix指定在视图后添加的后缀 ,如视图逻辑名"login"将解析为/WEB-INF/jsp/login.jsp-->
+    <bean
+            class="org.springframework.web.servlet.view.InternalResourceViewResolver"
+            p:viewClass="org.springframework.web.servlet.view.JstlView"
+           p:prefix="/pages/"
+            p:suffix=".jsp"/>
+</beans>

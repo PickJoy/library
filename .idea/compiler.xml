@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="library-common" />
+        <module name="library-dao" />
+        <module name="library-service" />
+        <module name="library-web" />
+        <module name="untitled" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="library-common" target="1.5" />
+      <module name="library-config" target="1.5" />
+      <module name="library-dao" target="1.6" />
+      <module name="library-service" target="1.6" />
+      <module name="library-web" target="1.5" />
+      <module name="untitled" target="1.7" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
